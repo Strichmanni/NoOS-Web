@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <title>TerbiumOS App Store</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.0/jszip.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: #1a1a1a;
+      color: #fff;
+    }
+    header {
+      background: #4169e1;
+      padding: 1rem;
+      text-align: center;
+      font-size: 1.5rem;
+    }
+    .tab {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem;
+      background: #2a2a2a;
+    }
+    .tab input {
+      padding: 0.5rem;
+      border: none;
+      border-radius: 5px;
+      width: 200px;
+    }
+    #apps-container {
+      display: flex;
+      flex-wrap: wrap;
+      padding: 1rem;
+      gap: 1rem;
+    }
+    .app-card {
+      background: #333;
+      border-radius: 10px;
+      padding: 1rem;
+      width: 200px;
+      text-align: center;
+    }
+    .app-card img {
+      width: 64px;
+      height: 64px;
+      margin-bottom: 0.5rem;
+    }
+    .app-card button {
+      background: #4cb05e;
+      color: #fff;
+      border: none;
+      padding: 0.5rem 1rem;
+      margin-top: 0.5rem;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <header>NoApps AppStore</header>
+  <div class="tab">
+    <span>Apps durchsuchen</span>
+    <input type="text" id="searchInput" placeholder="Suchen...">
+  </div>
+  <div id="apps-container"></div>
+
+  <script>
+    const APPS_TXT_URL = "https://terbiumos.infy.uk/apps.txt";
+    const ZIP_BASE_URL = "https://terbiumos.infy.uk/zips/";
+
+    async function fetchAppList() {
+      const res = await fetch(APPS_TXT_URL);
+      const text = await res.text();
+      return text.trim().split("\n").map(line => {
+        const [name, description, developer, icon] = line.split("|");
+        return { name, description, developer, icon };
+      });
+    }
+
+    function createAppCard(app) {
+      const div = document.createElement("div");
+      div.className = "app-card";
+      div.innerHTML = `
+        <img src="${app.icon}" alt="${app.name}">
+        <h3>${app.name}</h3>
+        <p>${app.description}</p>
+        <small>by ${app.developer}</small><br>
+        <button onclick="installApp('${app.name}')">Installieren</button>
+      `;
+      return div;
+    }
+
+    async function installApp(appName) {
+      const zipUrl = `${ZIP_BASE_URL}${appName}.zip`;
+      const res = await fetch(zipUrl);
+      const blob = await res.blob();
+      const zip = await JSZip.loadAsync(blob);
+      const folder = await zip.folder("");
+
+      const files = {};
+      await Promise.all(Object.keys(zip.files).map(async fileName => {
+        const fileData = await zip.file(fileName).async("blob");
+        files[fileName] = URL.createObjectURL(fileData);
+      }));
+
+      // Simuliere Start
+      if (files["app.html"]) {
+        const a = document.createElement("a");
+        a.href = files["app.html"];
+        a.target = "_blank";
+        a.click();
+      } else {
+        alert("app.html fehlt.");
+      }
+    }
+
+    async function loadStore() {
+      const apps = await fetchAppList();
+      const container = document.getElementById("apps-container");
+      const search = document.getElementById("searchInput");
+
+      function renderApps(filter = "") {
+        container.innerHTML = "";
+        apps.filter(app => app.name.toLowerCase().includes(filter.toLowerCase()))
+            .forEach(app => container.appendChild(createAppCard(app)));
+      }
+
+      search.addEventListener("input", () => renderApps(search.value));
+      renderApps();
+    }
+
+    loadStore();
+  </script>
+</body>
+</html>
