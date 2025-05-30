@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <title>NoOS</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- Bootscreen -->
+  <div id="boot">
+    <h1 id="logo">NoOS</h1>
+    <div class="loader"></div>
+  </div>
+
+  <!-- Setup Schritt 1 -->
+  <div id="setup" class="hidden">
+    <h2 id="hello" class="gradient-text">Hallo</h2>
+    <button id="startSetup">Start</button>
+  </div>
+
+  <!-- Setup Schritt 2 -->
+  <div id="setupDetails" class="hidden">
+    <label for="avatar" class="avatar-upload">
+      <img id="avatarPreview" src="default-avatar.png" alt="Profilbild" />
+    </label>
+    <input type="file" id="avatar" accept="image/*" hidden />
+
+    <input type="text" id="name" placeholder="Name" />
+    <input type="password" id="pass" placeholder="Passwort" />
+    <button id="finishSetup">Setup abschließen</button>
+  </div>
+
+  <!-- Loading Screen -->
+  <div id="loading" class="hidden">
+    <h2>Willkommen bei NoOS</h2>
+    <div class="progressbar"></div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+{
+  "name": "legacy-terbium",
+  "version": "1.45-LTS",
+  "description": "A Instance of Terbium WebOS!",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "keywords": [
+    "proxy"
+  ],
+  "author": "TerbiumOS",
+  "dependencies": {
+    "@mercuryworkshop/wisp-js": "^0.3.3",
+    "express": "^4.21.2",
+    "path": "^0.12.7",
+    "simplebar": "^6.3.0",
+    "ws": "^8.18.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TerbiumOS/webOS.git"
+  },
+  "bugs": {
+    "url": "https://github.com/TerbiumOS/webOS/issues"
+  },
+  "homepage": "https://github.com/TerbiumOS/webOS#readme"
+}

@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>NoOS Komplett</title>
+<style>
+  html, body {
+    margin: 0; padding: 0; height: 100%; overflow: hidden;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: url('wallpaper1.jpg') center/cover no-repeat;
+    user-select: none;
+  }
+  #desktop {
+    position: absolute;
+    top: 40px; /* für obere Leiste */
+    left: 0; right: 0; bottom: 80px; /* für Dock */
+    overflow: hidden;
+  }
+  /* Shortcuts auf Desktop */
+  .shortcut {
+    position: absolute;
+    width: 64px;
+    color: white;
+    text-align: center;
+    cursor: grab;
+    user-select: none;
+  }
+  .shortcut img {
+    width: 48px; height: 48px;
+    border-radius: 10px;
+    pointer-events: none;
+  }
+  .shortcut span {
+    font-size: 12px;
+    display: block;
+    margin-top: 4px;
+    pointer-events: none;
+  }
+  /* Fenster */
+  .window {
+    position: absolute;
+    width: 400px;
+    height: 300px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.5);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    user-select: none;
+    z-index: 1000;
+  }
+  .window-header {
+    background: #222;
+    color: white;
+    padding: 6px 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: grab;
+    user-select: none;
+  }
+  .window-header .title {
+    font-weight: bold;
+  }
+  .window-header .controls button {
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 16px;
+    width: 28px;
+    height: 28px;
+    cursor: pointer;
+    border-radius: 6px;
+    margin-left: 5px;
+    line-height: 20px;
+    user-select: none;
+  }
+  .window-header .controls button:hover {
+    background: #555;
+  }
+  .window-content {
+    flex: 1;
+    border-top: 1px solid #ccc;
+    position: relative;
+  }
+  .window-content iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+  }
+  /* Dock */
+  #dock {
+    position: absolute;
+    bottom: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    height: 60px;
+    background: rgba(30,30,30,0.5);
+    border-radius: 30px;
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+    z-index: 2000;
+    user-select: none;
+  }
+  #dock img {
+    height: 44px;
+    cursor: pointer;
+    border-radius: 12px;
+    transition: transform 0.2s ease, filter 0.2s ease;
+  }
+  #dock img:hover {
+    transform: scale(1.3);
+    filter: drop-shadow(0 0 6px white);
+  }
+  /* Obere Leiste */
+  #top-bar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 40px;
+    background: rgba(20,20,20,0.9);
+    display: flex;
+    align-items: center;
+    padding: 0 15px;
+    color: white;
+    font-size: 14px;
+    user-select: none;
+    z-index: 3000;
+  }
+  #logo {
+    cursor: pointer;
+    font-weight: 900;
+    font-size: 20px;
+    margin-right: auto;
+  }
+  #power-popup, #wallpaper-popup {
+    position: fixed;
+    top: 45px;
+    left: 15px;
+    background: #111;
+    border-radius: 12px;
+    padding: 15px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.8);
+    display: none;
+    z-index: 4000;
+    width: 220px;
+  }
+  #power-popup button, #wallpaper-popup button {
+    width: 100%;
+    margin-top: 10px;
+    padding: 8px;
+    font-size: 14px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    background: #333;
+    color: white;
+    transition: background 0.3s ease;
+  }
+  #power-popup button:hover, #wallpaper-popup button:hover {
+    background: #555;
+  }
+  #wallpaper-popup .wallpaper-option {
+    width: 60px;
+    height: 40px;
+    margin: 5px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: inline-block;
+    background-size: cover;
+    border: 2px solid transparent;
+    transition: border-color 0.3s ease;
+  }
+  #wallpaper-popup .wallpaper-option:hover {
+    border-color: #fff;
+  }
+  #status-right {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  #battery {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  #battery-icon {
+    width: 28px;
+    height: 14px;
+    border: 2px solid white;
+    border-radius: 3px;
+    position: relative;
+  }
+  #battery-icon::after {
+    content: "";
+    position: absolute;
+    top: 4px;
+    right: -8px;
+    width: 6px;
+    height: 6px;
+    background: white;
+    border-radius: 1px;
+  }
+  #battery-level {
+    height: 10px;
+    background: limegreen;
+    border-radius: 1px;
+    width: 50%;
+  }
+  #clock {
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+  }
+</style>
+</head>
+<body>
+
+<div id="top-bar">
+  <div id="logo" title="Power & Wallpaper Optionen">NoOS</div>
+
+  <div id="power-popup">
+    <button id="shutdown-btn">Herunterfahren</button>
+    <button id="restart-btn">Neu starten</button>
+    <button id="wallpaper-btn">Wallpaper ändern</button>
+  </div>
+
+  <div id="wallpaper-popup">
+    <div class="wallpaper-option" style="background-image:url('wallpaper1.jpg')" data-wallpaper="wallpaper1.jpg"></div>
+    <div class="wallpaper-option" style="background-image:url('wallpaper2.jpg')" data-wallpaper="wallpaper2.jpg"></div>
+    <div class="wallpaper-option" style="background-image:url('wallpaper3.jpg')" data-wallpaper="wallpaper3.jpg"></div>
+  </div>
+
+  <div id="status-right">
+    <div id="battery" title="Batteriestatus">
+      <div id="battery-icon"><div id="battery-level"></div></div>
+      <span id="battery-percent">--%</span>
+    </div>
+    <div id="clock"></div>
+  </div>
+</div>
+
+<div id="desktop"></div>
+
+<div id="dock" title="Apps Dock">
+  <img src="icons/apps.png" alt="Alle Apps" id="all-apps-btn" title="Alle Apps anzeigen" />
+  <img src="icons/folder.png" alt="Dateimanager" draggable="true" data-title="Dateimanager" data-icon="icons/folder.png" data-url="apps/folder.html" />
+  <img src="icons/terminal.png" alt="Terminal" draggable="true" data-title="Terminal" data-icon="icons/terminal.png" data-url="apps/terminal.html" />
+  <img src="icons/settings.png" alt="Einstellungen" draggable="true" data-title="Einstellungen" data-icon="icons/settings.png" data-url="apps/settings.html" />
+</div>
+
+<div id="app-launcher" style="display:none; position: fixed; top:40px; left:0; right:0; bottom:80px; background: rgba(0,0,0,0.6); z-index:3000; overflow: auto;">
+  <div style="background:#111; margin: 40px auto; max-width: 500px; border-radius: 16px; padding: 20px; color: white;">
+    <h2>Alle Apps</h2>
+    <div style="display: grid; grid-template-columns: repeat(auto-fill,minmax(100px,1fr)); gap: 15px;">
+      <div class="app-item" data-title="Dateimanager" data-icon="icons/folder.png" data-url="apps/folder.html" style="cursor:pointer; background:#222; border-radius: 12px; padding: 10px; text-align:center;">
+        <img src="icons/folder.png" style="height: 40px; margin-bottom: 5px;" />
+        <div>Dateimanager</div>
+      </div>
+      <div class="app-item" data-title="Terminal" data-icon="icons/terminal.png" data-url="apps/terminal.html" style="cursor:pointer; background:#222; border-radius: 12px; padding: 10px; text-align:center;">
+        <img src="icons/terminal.png" style="height: 40px; margin-bottom: 5px;" />
+        <div>Terminal</div>
+      </div>
+      <div class="app-item" data-title="Einstellungen" data-icon="icons/settings.png" data-url="apps/settings.html" style="cursor:pointer; background:#222; border-radius: 12px; padding: 10px; text-align:center;">
+        <img src="icons/settings.png" style="height: 40px; margin-bottom: 5px;" />
+        <div>Einstellungen</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const desktop = document.getElementById('desktop');
+  const dock = document.getElementById('dock');
+  const appLauncher = document.getElementById('app-launcher');
+  const allAppsBtn = document.getElementById('all-apps-btn');
+  const logo = document.getElementById('logo');
+  const powerPopup = document.getElementById('power-popup');
+  const wallpaperPopup = document.getElementById('wallpaper-popup');
+  const batteryLevel = document.getElementById('battery-level');
+  const batteryPercent = document.getElementById('battery-percent');
+  const clock = document.getElementById('clock');
+
+  // Apps Liste
+  const apps = [
+    { title: 'Dateimanager', icon: 'icons/folder.png', url: 'apps/folder.html' },
+    { title: 'Terminal', icon: 'icons/terminal.png', url: 'apps/terminal.html' },
+    { title: 'Einstellungen', icon: 'icons/settings.png', url: 'apps/settings.html' },
+  ];
+
+  // Offene Fenster und Z-Index
+  let zIndexCounter = 1000;
+  let windows = [];
+
+  // Wallpaper aktuell
+  let currentWallpaper = 'wallpaper1.jpg';
+
+  // Fenster öffnen Funktion
+  function openApp(title, icon, url) {
+    // Wenn Fenster mit Titel schon offen, bring es in den Vordergrund
+    const existing = windows.find(w => w.dataset.title === title);
+    if (existing) {
+      existing.style.display = 'flex';
+      bringToFront(existing);
+      return;
+    }
+
+    const win = document.createElement('div');
+    win.className = 'window';
+    win.style.left = '100px';
+    win.style.top = '100px';
+    win.style.zIndex = ++zIndexCounter;
+    win.dataset.title = title;
+
+    win.innerHTML = `
+      <div class="window-header" title="Fenster bewegen">
+        <div class="title">${title}</div>
+        <div class="controls">
+          <button class="min-btn" title="Minimieren">–</button>
+          <button class="close-btn" title="Schließen">×</button>
+        </div>
+      </div>
+      <div class="window-content">
+        <iframe src="${url}"></iframe>
+      </div>
+    `;
+
+    desktop.appendChild(win);
+    windows.push(win);
+
+    // Drag Fenster
+    const header = win.querySelector('.window-header');
+    dragElement(win, header);
+
+    // Buttons
+    win.querySelector('.close-btn').onclick = () => {
+      win.style.display = 'none';
+    };
+    win.querySelector('.min-btn').onclick = () => {
+      win.style.display = 'none';
+    };
+
+    win.onclick = () => bringToFront(win);
+  }
+
+  // Fenster in den Vordergrund
+  function bringToFront(win) {
+    win.style.zIndex = ++zIndexCounter;
+  }
+
+  // Fenster drag Funktion
+  function dragElement(elmnt, dragHandle) {
+    let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+    dragHandle.onmousedown = dragMouseDown;
+
+    function dragMouseDown(e) {
+      e.preventDefault();
+      pos3 = e.clientX;
+      pos4 = e.clientY;
+      document.onmouseup = closeDragElement;
+      document.onmousemove = elementDrag;
+      bringToFront(elmnt);
+    }
+
+    function elementDrag(e) {
+      e.preventDefault();
+      pos1 = pos3 - e.clientX;
+      pos2 = pos4 - e.clientY;
+      pos3 = e.clientX;
+      pos4 = e.clientY;
+      let newTop = elmnt.offsetTop - pos2;
+      let newLeft = elmnt.offsetLeft - pos1;
+      // Begrenzen auf Desktop
+      const desktopRect = desktop.getBoundingClientRect();
+      newTop = Math.min(Math.max(newTop, 0), desktopRect.height - elmnt.offsetHeight);
+      newLeft = Math.min(Math.max(newLeft, 0), desktopRect.width - elmnt.offsetWidth);
+      elmnt.style.top = newTop + "px";
+      elmnt.style.left = newLeft + "px";
+    }
+
+    function closeDragElement() {
+      document.onmouseup = null;
+      document.onmousemove = null;
+    }
+  }
+
+  // Dock Klick öffnet App
+  dock.querySelectorAll('img[draggable="true"]').forEach(icon => {
+    icon.onclick = () => openApp(icon.dataset.title, icon.dataset.icon, icon.dataset.url);
+    // Drag shortcut auf Desktop
+    icon.ondragstart = e => {
+      e.dataTransfer.setData('text/plain', JSON.stringify({
+        title: icon.dataset.title,
+        icon: icon.dataset.icon,
+        url: icon.dataset.url
+      }));
+    };
+  });
+
+  // Desktop: Shortcut loslassen
+  desktop.ondragover = e => {
+    e.preventDefault();
+  };
+  desktop.ondrop = e => {
+    e.preventDefault();
+    try {
+      const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+      createShortcut(data.title, data.icon, data.url, e.clientX, e.clientY);
+    } catch {
+      // nichts machen
+    }
+  };
+
+  // Shortcut erstellen auf Desktop
+  function createShortcut(title, icon, url, x, y) {
+    const shortcut = document.createElement('div');
+    shortcut.className = 'shortcut';
+    shortcut.style.left = (x - 32) + 'px';
+    shortcut.style.top = (y - 48) + 'px';
+    shortcut.innerHTML = `<img src="${icon}" alt="${title}"/><span>${title}</span>`;
+    desktop.appendChild(shortcut);
+
+    // Klick öffnet App
+    shortcut.onclick = () => openApp(title, icon, url);
+
+    // Drag shortcut auf Desktop verschieben
+    shortcut.onmousedown = e => {
+      e.preventDefault();
+      let shiftX = e.clientX - shortcut.getBoundingClientRect().left;
+      let shiftY = e.clientY - shortcut.getBoundingClientRect().top;
+
+      function moveAt(pageX, pageY) {
+        shortcut.style.left = pageX - shiftX + 'px';
+        shortcut.style.top = pageY - shiftY + 'px';
+      }
+
+      function onMouseMove(e) {
+        moveAt(e.pageX, e.pageY);
+      }
+
+      document.addEventListener('mousemove', onMouseMove);
+
+      document.onmouseup = function() {
+        document.removeEventListener('mousemove', onMouseMove);
+        document.onmouseup = null;
+      };
+    };
+  }
+
+  // Alle Apps Button
+  allAppsBtn.onclick = () => {
+    if (appLauncher.style.display === 'none') {
+      appLauncher.style.display = 'block';
+    } else {
+      appLauncher.style.display = 'none';
+    }
+  };
+
+  // Apps im AppLauncher öffnen
+  appLauncher.querySelectorAll('.app-item').forEach(item => {
+    item.onclick = () => {
+      openApp(item.dataset.title, item.dataset.icon, item.dataset.url);
+      appLauncher.style.display = 'none';
+    };
+  });
+
+  // Logo Klick: Power Optionen toggle
+  logo.onclick = () => {
+    if (powerPopup.style.display === 'block') {
+      powerPopup.style.display = 'none';
+      wallpaperPopup.style.display = 'none';
+    } else {
+      powerPopup.style.display = 'block';
+      wallpaperPopup.style.display = 'none';
+    }
+  };
+
+  // Power Popup Buttons
+  document.getElementById('shutdown-btn').onclick = () => alert('Herunterfahren (simuliert)');
+  document.getElementById('restart-btn').onclick = () => alert('Neustart (simuliert)');
+  document.getElementById('wallpaper-btn').onclick = () => {
+    wallpaperPopup.style.display = 'block';
+    powerPopup.style.display = 'none';
+  };
+
+  // Wallpaper Auswahl
+  wallpaperPopup.querySelectorAll('.wallpaper-option').forEach(opt => {
+    opt.onclick = () => {
+      const wp = opt.dataset.wallpaper;
+      document.body.style.backgroundImage = `url('${wp}')`;
+      currentWallpaper = wp;
+      wallpaperPopup.style.display = 'none';
+    };
+  });
+
+  // Batterie Status (wenn unterstützt)
+  if ('getBattery' in navigator) {
+    navigator.getBattery().then(battery => {
+      function updateBattery() {
+        let level = battery.level * 100;
+        batteryLevel.style.width = level + '%';
+        batteryPercent.textContent = level.toFixed(0) + '%';
+        if (level > 60) batteryLevel.style.background = 'limegreen';
+        else if (level > 30) batteryLevel.style.background = 'orange';
+        else batteryLevel.style.background = 'red';
+      }
+      updateBattery();
+      battery.addEventListener('levelchange', updateBattery);
+      battery.addEventListener('chargingchange', updateBattery);
+    });
+  } else {
+    // Keine Battery API
+    batteryPercent.textContent = 'N/A';
+    batteryLevel.style.background = 'gray';
+    batteryLevel.style.width = '50%';
+  }
+
+  // Uhrzeit anzeigen
+  function updateClock() {
+    const now = new Date();
+    clock.textContent = now.toLocaleTimeString('de-DE', {hour: '2-digit', minute:'2-digit', second:'2-digit'});
+  }
+  updateClock();
+  setInterval(updateClock, 1000);
+
+  // Klick außerhalb schließt Popups
+  document.addEventListener('click', e => {
+    if (!powerPopup.contains(e.target) && e.target !== logo) {
+      powerPopup.style.display = 'none';
+    }
+    if (!wallpaperPopup.contains(e.target) && e.target !== document.getElementById('wallpaper-btn')) {
+      wallpaperPopup.style.display = 'none';
+    }
+    if (!appLauncher.contains(e.target) && e.target !== allAppsBtn) {
+      appLauncher.style.display = 'none';
+    }
+  });
+</script>
+
+</body>
+</html>
