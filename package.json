@@ -16,7 +16,7 @@
     "express": "^4.21.2",
     "path": "^0.12.7",
     "simplebar": "^6.3.0",
-    "ws": "^8.18.0"
+    "ws": "^8.18.2"
   },
   "repository": {
     "type": "git",
