@@ -256,18 +256,6 @@
         icon.onclick = () => openAppWindow(app);
         dock.appendChild(icon);
       });
-
-      // AppStore Button
-      const appStore = apps.find(a => a.name.toLowerCase() === 'appstore');
-      if (appStore) {
-        const appStoreIcon = document.createElement('img');
-        appStoreIcon.src = appStore.icon;
-        appStoreIcon.title = 'App Store';
-        appStoreIcon.style.borderRadius = '12px';
-        appStoreIcon.style.cursor = 'pointer';
-        appStoreIcon.onclick = () => openAppWindow(appStore);
-        dock.appendChild(appStoreIcon);
-      }
     }
 
     // Popup mit allen Apps anzeigen / verstecken
