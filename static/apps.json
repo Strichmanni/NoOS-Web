@@ -14,9 +14,9 @@
     "desktop": true
   },
   {
-    "name": "Notizen",
-    "icon": "icons/notes.png",
-    "src": "/apps/notes.html",
+    "name": "Terminal",
+    "icon": "icons/terminal.png",
+    "src": "/apps/terminal.html",
     "dock": false,
     "desktop": true
   }
