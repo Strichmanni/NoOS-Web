@@ -17,4 +17,10 @@
     "src": "apps/editor.html",
     "dock": false
   }
+  {
+    "name": "AppStore",
+    "icon": "apps/editor.png",
+    "src": "noapps.html",
+    "dock": true
+  }
 ]
