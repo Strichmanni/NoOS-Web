@@ -1,12 +1,5 @@
 [
   {
-    "name": "AppStore",
-    "icon": "icons/appstore.png",
-    "src": "noapps.html",
-    "dock": true,
-    "desktop": false
-  },
-  {
     "name": "Browser",
     "icon": "icons/browser.png",
     "src": "https://example.com",
