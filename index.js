@@ -3,37 +3,42 @@ import { createServer } from "node:http";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
-import { server as wisp } from "@mercuryworkshop/wisp-js";
-import "ws";
 
-console.log("Starting Terbium...");
 const app = express();
+const server = createServer(app);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-app.use(express.static("static"));
-const server = createServer();
+// Statische Dateien ausliefern
+app.use(express.static(path.join(__dirname, "static")));
+app.use(express.json());
 
-server.on("request", (req, res) => {
-  app(req, res);
+// GET: Lade Apps
+app.get("/api/apps", (req, res) => {
+  const filePath = path.join(__dirname, "static", "apps.json");
+  fs.readFile(filePath, "utf8", (err, data) => {
+    if (err) return res.status(500).send("Fehler beim Lesen");
+    res.json(JSON.parse(data));
+  });
 });
 
-server.on("upgrade", (req, socket, head) => {
-  if (req.url.endsWith("/wisp/")) {
-    wisp.routeRequest(req, socket, head);
-  }
+// POST: Neue App hinzufügen
+app.post("/api/apps", (req, res) => {
+  const filePath = path.join(__dirname, "static", "apps.json");
+  const newApp = req.body;
+  fs.readFile(filePath, "utf8", (err, data) => {
+    if (err) return res.status(500).send("Fehler beim Lesen");
+    const apps = JSON.parse(data);
+    apps.push(newApp);
+    fs.writeFile(filePath, JSON.stringify(apps, null, 2), (err) => {
+      if (err) return res.status(500).send("Fehler beim Schreiben");
+      res.status(201).send("App hinzugefügt");
+    });
+  });
 });
 
-const port = parseInt("6969");
-const manifest = fs.readFileSync(path.join(__dirname, 'package.json'), 'utf-8');
-const { version } = JSON.parse(manifest);
+// Server starten
+const port = 6969;
 server.listen(port, () => {
-  console.log(`
-\x1b[38;2;60;195;240mWelcome to Legacy NoOS v${version} running on Port ${port}
-  `);
-});
-
-process.on("SIGINT", () => {
-  console.log("\x1b[0m");
-  process.exit();
+  console.log(`NoOS läuft auf http://localhost:${port}`);
 });
