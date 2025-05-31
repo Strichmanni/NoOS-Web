@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>NoOS</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+      background: url('wallpapers/soco.jpg') center/cover no-repeat;
+      font-family: sans-serif;
+      cursor: url('custom-cursor.png'), auto;
+    }
+
+    #topbar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 30px;
+      background: rgba(20, 20, 20, 0.7);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 10px;
+      z-index: 1100;
+    }
+
+    #topbar-logo {
+      cursor: pointer;
+    }
+
+    #power-wallpaper-menu {
+      position: absolute;
+      top: 30px;
+      left: 10px;
+      background: #222;
+      border-radius: 10px;
+      padding: 10px;
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+      color: white;
+      z-index: 1200;
+    }
+
+    .wallpaper-option {
+      display: inline-block;
+      text-align: center;
+      margin: 5px;
+    }
+
+    .wallpaper-option img {
+      width: 60px;
+      height: 40px;
+      border-radius: 8px;
+      cursor: pointer;
+      border: 2px solid transparent;
+    }
+
+    .wallpaper-option img:hover {
+      border-color: white;
+    }
+
+    .wallpaper-option span {
+      display: block;
+      margin-top: 5px;
+      font-size: 12px;
+    }
+
+    #battery, #clock {
+      margin-left: 15px;
+    }
+
+    #desktop {
+      position: absolute;
+      top: 30px;
+      left: 0;
+      right: 0;
+      bottom: 80px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, 80px);
+      grid-auto-rows: 100px;
+      gap: 20px;
+      padding: 20px;
+    }
+
+    .shortcut {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 80px;
+      height: 100px;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .shortcut img {
+      width: 64px;
+      height: 64px;
+      border-radius: 12px;
+    }
+
+    .shortcut span {
+      color: white;
+      font-size: 12px;
+      text-align: center;
+    }
+
+    #dock {
+      position: absolute;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      height: 60px;
+      background: rgba(30, 30, 30, 0.5);
+      border-radius: 30px;
+      padding: 0 20px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+      z-index: 1000;
+    }
+
+    #dock img {
+      height: 40px;
+      cursor: pointer;
+      border-radius: 12px;
+      transition: transform 0.2s;
+    }
+
+    #dock img:hover {
+      transform: scale(1.4);
+      filter: drop-shadow(0 0 5px white);
+    }
+
+    #dock img.dragging {
+      opacity: 0.5;
+    }
+
+    .window {
+      position: absolute;
+      top: 100px;
+      left: 100px;
+      width: 400px;
+      height: 300px;
+      background: white;
+      border: 2px solid #000;
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      resize: both;
+      overflow: auto;
+      z-index: 2000;
+    }
+
+    .window-header {
+      background: #444;
+      color: white;
+      padding: 5px;
+      cursor: move;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .window-header span {
+      flex-grow: 1;
+      padding-left: 10px;
+    }
+
+    .window-controls {
+      display: flex;
+      gap: 5px;
+    }
+
+    .window-controls button {
+      background: none;
+      border: none;
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.2s;
+    }
+
+    .window-controls button:hover {
+      background: red;
+    }
+
+    .minimized-windows {
+      position: absolute;
+      bottom: 80px;
+      left: 10px;
+      display: flex;
+      gap: 5px;
+      z-index: 1100;
+    }
+
+    .minimized-icon {
+      width: 40px;
+      height: 40px;
+      cursor: pointer;
+    }
+
+    iframe {
+      flex-grow: 1;
+      border: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="topbar">
+    <div id="topbar-logo" onclick="togglePowerMenu()">☰ NoOS</div>
+    <div style="display: flex; align-items: center;">
+      <div id="battery">🔋</div>
+      <div id="clock"></div>
+    </div>
+  </div>
+
+  <div id="power-wallpaper-menu">
+    <button onclick="shutdownSystem()">Herunterfahren</button>
+    <div>
+      <div class="wallpaper-option" onclick="changeWallpaper('soco.jpg')">
+        <img src="wallpapers/soco.jpg" alt="Soco"><span>Soco</span>
+      </div>
+      <div class="wallpaper-option" onclick="changeWallpaper('garden.jpg')">
+        <img src="wallpapers/garden.jpg" alt="Garden"><span>Garden</span>
+      </div>
+      <div class="wallpaper-option" onclick="changeWallpaper('helsi.jpg')">
+        <img src="wallpapers/helsi.jpg" alt="Helsi"><span>Helsi</span>
+      </div>
+      <div class="wallpaper-option" onclick="changeWallpaper('artical.jpg')">
+        <img src="wallpapers/artical.jpg" alt="Artical"><span>Artical</span>
+      </div>
+      <div class="wallpaper-option">
+        <label for="customWallpaper">
+          <img src="wallpapers/custom.jpg" alt="Custom"><span>Custom</span>
+        </label>
+        <input type="file" id="customWallpaper" style="display:none" onchange="loadCustomWallpaper(event)">
+      </div>
+    </div>
+  </div>
+
+  <div id="desktop"></div>
+  <div id="dock"></div>
+  <div class="minimized-windows" id="minimizedWindows"></div>
+
+  <script>
+    function createShortcut(app) {
+      const shortcut = document.createElement('div');
+      shortcut.className = 'shortcut';
+      shortcut.innerHTML = `<img src="${app.icon}"><span>${app.name}</span>`;
+      shortcut.onclick = () => openAppWindow(app);
+      shortcut.oncontextmenu = (e) => {
+        e.preventDefault();
+        shortcut.remove();
+      };
+      document.getElementById('desktop').appendChild(shortcut);
+    }
+
+    function createDockIcon(app) {
+      const icon = document.createElement('img');
+      icon.src = app.icon;
+      icon.title = app.name;
+      icon.onclick = () => openAppWindow(app);
+      document.getElementById('dock').appendChild(icon);
+      enableDockDragging();
+    }
+
+    function enableDockDragging() {
+      const dock = document.getElementById('dock');
+      const icons = dock.querySelectorAll('img');
+
+      icons.forEach(icon => {
+        icon.setAttribute('draggable', 'true');
+
+        icon.addEventListener('dragstart', (e) => {
+          draggedIcon = icon;
+          icon.classList.add('dragging');
+          e.dataTransfer.setData('text/plain', '');
+        });
+
+        icon.addEventListener('dragend', () => {
+          icon.classList.remove('dragging');
+          draggedIcon = null;
+        });
+
+        icon.addEventListener('dragover', (e) => e.preventDefault());
+
+        icon.addEventListener('drop', (e) => {
+          e.preventDefault();
+          if (draggedIcon && draggedIcon !== icon) {
+            dock.insertBefore(draggedIcon, icon.nextSibling === draggedIcon ? icon : icon);
+            enableDockDragging();
+          }
+        });
+      });
+    }
+
+    function openAppWindow(app) {
+      const win = document.createElement('div');
+      win.className = 'window';
+      win.innerHTML = `
+        <div class="window-header">
+          <span>${app.name}</span>
+          <div class="window-controls">
+            <button onclick="minimizeWindow(this)">—</button>
+            <button onclick="maximizeWindow(this)">◻</button>
+            <button onclick="this.closest('.window').remove()">✕</button>
+          </div>
+        </div>
+        <iframe src="${app.src}"></iframe>
+      `;
+      makeWindowDraggable(win);
+      document.body.appendChild(win);
+    }
+
+    function makeWindowDraggable(win) {
+      const header = win.querySelector('.window-header');
+      let offsetX, offsetY;
+      header.onmousedown = function(e) {
+        offsetX = e.clientX - win.offsetLeft;
+        offsetY = e.clientY - win.offsetTop;
+        document.onmousemove = function(e) {
+          win.style.left = (e.clientX - offsetX) + 'px';
+          win.style.top = (e.clientY - offsetY) + 'px';
+        };
+        document.onmouseup = () => document.onmousemove = null;
+      };
+    }
+
+    function minimizeWindow(btn) {
+      const win = btn.closest('.window');
+      win.style.display = 'none';
+      const icon = document.createElement('img');
+      icon.src = win.querySelector('iframe').src.includes('browser') ? 'apps/browser.png' : 'apps/terminal.png';
+      icon.className = 'minimized-icon';
+      icon.onclick = () => {
+        win.style.display = 'block';
+        icon.remove();
+      };
+      document.getElementById('minimizedWindows').appendChild(icon);
+    }
+
+    function maximizeWindow(btn) {
+      const win = btn.closest('.window');
+      win.style.top = '30px';
+      win.style.left = '0';
+      win.style.width = '100%';
+      win.style.height = 'calc(100% - 30px)';
+    }
+
+    function togglePowerMenu() {
+      const menu = document.getElementById('power-wallpaper-menu');
+      if (!menu) return;
+      menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex';
+    }
+
+    function shutdownSystem() {
+      window.close();
+    }
+
+    function changeWallpaper(name) {
+      const path = `wallpapers/${name}`;
+      document.body.style.backgroundImage = `url('${path}')`;
+      localStorage.setItem('wallpaper', path);
+    }
+
+    function loadCustomWallpaper(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const imageData = reader.result;
+          document.body.style.backgroundImage = `url('${imageData}')`;
+          localStorage.setItem('wallpaper', imageData);
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    const savedWallpaper = localStorage.getItem('wallpaper');
+    if (savedWallpaper) {
+      document.body.style.backgroundImage = `url('${savedWallpaper}')`;
+    }
+
+    setInterval(() => {
+      const now = new Date();
+      document.getElementById('clock').textContent = now.toLocaleTimeString();
+      navigator.getBattery().then(battery => {
+        document.getElementById('battery').textContent = `🔋 ${Math.round(battery.level * 100)}%`;
+      });
+    }, 1000);
+
+    fetch('apps.json')
+      .then(res => res.json())
+      .then(apps => {
+        apps.forEach(app => {
+          createShortcut(app);
+          if (app.dock) createDockIcon(app);
+        });
+      });
+  </script>
+</body>
+</html>
+

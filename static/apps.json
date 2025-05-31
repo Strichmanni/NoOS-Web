@@ -1,0 +1,20 @@
+[
+  {
+    "name": "Browser",
+    "icon": "apps/browser.png",
+    "src": "apps/browser.html",
+    "dock": true
+  },
+  {
+    "name": "Terminal",
+    "icon": "apps/terminal.png",
+    "src": "apps/terminal.html",
+    "dock": true
+  },
+  {
+    "name": "Editor",
+    "icon": "apps/editor.png",
+    "src": "apps/editor.html",
+    "dock": false
+  }
+]
