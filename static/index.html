@@ -29,10 +29,6 @@
       z-index: 1100;
     }
 
-    #topbar-logo {
-      cursor: pointer;
-    }
-
     #power-wallpaper-menu {
       position: absolute;
       top: 30px;
@@ -47,12 +43,6 @@
       z-index: 1200;
     }
 
-    .wallpaper-option {
-      display: inline-block;
-      text-align: center;
-      margin: 5px;
-    }
-
     .wallpaper-option img {
       width: 60px;
       height: 40px;
@@ -63,16 +53,6 @@
 
     .wallpaper-option img:hover {
       border-color: white;
-    }
-
-    .wallpaper-option span {
-      display: block;
-      margin-top: 5px;
-      font-size: 12px;
-    }
-
-    #battery, #clock {
-      margin-left: 15px;
     }
 
     #desktop {
@@ -96,7 +76,6 @@
       width: 80px;
       height: 100px;
       cursor: pointer;
-      position: relative;
     }
 
     .shortcut img {
@@ -139,10 +118,6 @@
       filter: drop-shadow(0 0 5px white);
     }
 
-    #dock img.dragging {
-      opacity: 0.5;
-    }
-
     .window {
       position: absolute;
       top: 100px;
@@ -169,27 +144,11 @@
       align-items: center;
     }
 
-    .window-header span {
-      flex-grow: 1;
-      padding-left: 10px;
-    }
-
-    .window-controls {
-      display: flex;
-      gap: 5px;
-    }
-
     .window-controls button {
       background: none;
       border: none;
       color: white;
       cursor: pointer;
-      font-size: 14px;
-      transition: background 0.2s;
-    }
-
-    .window-controls button:hover {
-      background: red;
     }
 
     .minimized-windows {
@@ -201,15 +160,24 @@
       z-index: 1100;
     }
 
-    .minimized-icon {
-      width: 40px;
-      height: 40px;
-      cursor: pointer;
+    #allAppsPopup {
+      display: none;
+      position: absolute;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #222;
+      color: white;
+      border-radius: 10px;
+      padding: 20px;
+      z-index: 3000;
     }
 
-    iframe {
-      flex-grow: 1;
-      border: none;
+    #allAppsList {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      max-width: 600px;
     }
   </style>
 </head>
@@ -226,40 +194,49 @@
     <button onclick="shutdownSystem()">Herunterfahren</button>
     <div>
       <div class="wallpaper-option" onclick="changeWallpaper('soco.jpg')">
-        <img src="wallpapers/soco.jpg" alt="Soco"><span>Soco</span>
+        <img src="wallpapers/soco.jpg" alt="Soco">
       </div>
       <div class="wallpaper-option" onclick="changeWallpaper('garden.jpg')">
-        <img src="wallpapers/garden.jpg" alt="Garden"><span>Garden</span>
+        <img src="wallpapers/garden.jpg" alt="Garden">
       </div>
       <div class="wallpaper-option" onclick="changeWallpaper('helsi.jpg')">
-        <img src="wallpapers/helsi.jpg" alt="Helsi"><span>Helsi</span>
-      </div>
-      <div class="wallpaper-option" onclick="changeWallpaper('artical.jpg')">
-        <img src="wallpapers/artical.jpg" alt="Artical"><span>Artical</span>
-      </div>
-      <div class="wallpaper-option">
-        <label for="customWallpaper">
-          <img src="wallpapers/custom.jpg" alt="Custom"><span>Custom</span>
-        </label>
-        <input type="file" id="customWallpaper" style="display:none" onchange="loadCustomWallpaper(event)">
+        <img src="wallpapers/helsi.jpg" alt="Helsi">
       </div>
     </div>
   </div>
 
   <div id="desktop"></div>
   <div id="dock"></div>
-  <div class="minimized-windows" id="minimizedWindows"></div>
+  <div id="minimizedWindows" class="minimized-windows"></div>
+
+  <!-- Alle Apps Popup -->
+  <div id="allAppsPopup">
+    <h3>Alle Apps</h3>
+    <div id="allAppsList"></div>
+  </div>
 
   <script>
+    let loadedApps = [];
+
+    function fetchApps() {
+      fetch('apps.json')
+        .then(res => res.json())
+        .then(apps => {
+          loadedApps = apps;
+          apps.forEach(app => {
+            createShortcut(app);
+            if (app.dock) createDockIcon(app);
+          });
+          createAllAppsButton();
+        })
+        .catch(err => console.error('Fehler beim Laden von apps.json:', err));
+    }
+
     function createShortcut(app) {
       const shortcut = document.createElement('div');
       shortcut.className = 'shortcut';
       shortcut.innerHTML = `<img src="${app.icon}"><span>${app.name}</span>`;
       shortcut.onclick = () => openAppWindow(app);
-      shortcut.oncontextmenu = (e) => {
-        e.preventDefault();
-        shortcut.remove();
-      };
       document.getElementById('desktop').appendChild(shortcut);
     }
 
@@ -269,36 +246,32 @@
       icon.title = app.name;
       icon.onclick = () => openAppWindow(app);
       document.getElementById('dock').appendChild(icon);
-      enableDockDragging();
     }
 
-    function enableDockDragging() {
-      const dock = document.getElementById('dock');
-      const icons = dock.querySelectorAll('img');
+    function createAllAppsButton() {
+      const icon = document.createElement('img');
+      icon.src = 'apps/allapps.png'; // Beispiel-Icon!
+      icon.title = 'Alle Apps';
+      icon.onclick = toggleAllAppsPopup;
+      document.getElementById('dock').appendChild(icon);
+    }
 
-      icons.forEach(icon => {
-        icon.setAttribute('draggable', 'true');
-
-        icon.addEventListener('dragstart', (e) => {
-          draggedIcon = icon;
-          icon.classList.add('dragging');
-          e.dataTransfer.setData('text/plain', '');
-        });
-
-        icon.addEventListener('dragend', () => {
-          icon.classList.remove('dragging');
-          draggedIcon = null;
-        });
-
-        icon.addEventListener('dragover', (e) => e.preventDefault());
-
-        icon.addEventListener('drop', (e) => {
-          e.preventDefault();
-          if (draggedIcon && draggedIcon !== icon) {
-            dock.insertBefore(draggedIcon, icon.nextSibling === draggedIcon ? icon : icon);
-            enableDockDragging();
-          }
-        });
+    function toggleAllAppsPopup() {
+      const popup = document.getElementById('allAppsPopup');
+      const list = document.getElementById('allAppsList');
+      popup.style.display = popup.style.display === 'none' ? 'block' : 'none';
+      list.innerHTML = '';
+      loadedApps.forEach(app => {
+        const div = document.createElement('div');
+        div.style.cursor = 'pointer';
+        div.style.width = '80px';
+        div.style.textAlign = 'center';
+        div.innerHTML = `<img src="${app.icon}" style="width:48px;height:48px;border-radius:8px;"><br><span style="font-size:12px">${app.name}</span>`;
+        div.onclick = () => {
+          openAppWindow(app);
+          popup.style.display = 'none';
+        };
+        list.appendChild(div);
       });
     }
 
@@ -309,55 +282,30 @@
         <div class="window-header">
           <span>${app.name}</span>
           <div class="window-controls">
-            <button onclick="minimizeWindow(this)">—</button>
-            <button onclick="maximizeWindow(this)">◻</button>
             <button onclick="this.closest('.window').remove()">✕</button>
           </div>
         </div>
-        <iframe src="${app.src}"></iframe>
+        <iframe src="${app.src}" style="flex-grow:1; border:none;"></iframe>
       `;
-      makeWindowDraggable(win);
       document.body.appendChild(win);
+      makeWindowDraggable(win);
     }
 
     function makeWindowDraggable(win) {
       const header = win.querySelector('.window-header');
-      let offsetX, offsetY;
       header.onmousedown = function(e) {
-        offsetX = e.clientX - win.offsetLeft;
-        offsetY = e.clientY - win.offsetTop;
+        const offsetX = e.clientX - win.offsetLeft;
+        const offsetY = e.clientY - win.offsetTop;
         document.onmousemove = function(e) {
-          win.style.left = (e.clientX - offsetX) + 'px';
-          win.style.top = (e.clientY - offsetY) + 'px';
+          win.style.left = e.clientX - offsetX + 'px';
+          win.style.top = e.clientY - offsetY + 'px';
         };
         document.onmouseup = () => document.onmousemove = null;
       };
     }
 
-    function minimizeWindow(btn) {
-      const win = btn.closest('.window');
-      win.style.display = 'none';
-      const icon = document.createElement('img');
-      icon.src = win.querySelector('iframe').src.includes('browser') ? 'apps/browser.png' : 'apps/terminal.png';
-      icon.className = 'minimized-icon';
-      icon.onclick = () => {
-        win.style.display = 'block';
-        icon.remove();
-      };
-      document.getElementById('minimizedWindows').appendChild(icon);
-    }
-
-    function maximizeWindow(btn) {
-      const win = btn.closest('.window');
-      win.style.top = '30px';
-      win.style.left = '0';
-      win.style.width = '100%';
-      win.style.height = 'calc(100% - 30px)';
-    }
-
     function togglePowerMenu() {
       const menu = document.getElementById('power-wallpaper-menu');
-      if (!menu) return;
       menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex';
     }
 
@@ -371,41 +319,20 @@
       localStorage.setItem('wallpaper', path);
     }
 
-    function loadCustomWallpaper(event) {
-      const file = event.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = () => {
-          const imageData = reader.result;
-          document.body.style.backgroundImage = `url('${imageData}')`;
-          localStorage.setItem('wallpaper', imageData);
-        };
-        reader.readAsDataURL(file);
-      }
-    }
+    setInterval(() => {
+      const now = new Date();
+      document.getElementById('clock').textContent = now.toLocaleTimeString();
+      navigator.getBattery().then(b => {
+        document.getElementById('battery').textContent = `🔋 ${Math.round(b.level * 100)}%`;
+      });
+    }, 1000);
 
     const savedWallpaper = localStorage.getItem('wallpaper');
     if (savedWallpaper) {
       document.body.style.backgroundImage = `url('${savedWallpaper}')`;
     }
 
-    setInterval(() => {
-      const now = new Date();
-      document.getElementById('clock').textContent = now.toLocaleTimeString();
-      navigator.getBattery().then(battery => {
-        document.getElementById('battery').textContent = `🔋 ${Math.round(battery.level * 100)}%`;
-      });
-    }, 1000);
-
-    fetch('apps.json')
-      .then(res => res.json())
-      .then(apps => {
-        apps.forEach(app => {
-          createShortcut(app);
-          if (app.dock) createDockIcon(app);
-        });
-      });
+    fetchApps();
   </script>
 </body>
 </html>
-
