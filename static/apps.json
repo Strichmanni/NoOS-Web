@@ -16,7 +16,7 @@
   {
     "name": "Terminal",
     "icon": "icons/terminal.png",
-    "src": "/apps/terminal.html",
+    "src": "/terminal/terminal.html",
     "dock": false,
     "desktop": true
   }
