@@ -46,7 +46,7 @@ if(state === "new") {
     `;
     document.querySelector(".termin").innerHTML = `
         <div style="line-height: 1.6;">
-            Welcome to the Terbium Terminal type <code class="command">help</code> for available commands and keybindings or<br> <code class="command">-h <mark class="codeMark">command</mark></code> for a commands usage.
+            Welcome to the NoOS Terminal type <code class="command">help</code> for available commands and keybindings or<br> <code class="command">-h <mark class="codeMark">command</mark></code> for a commands usage.
         </div>
         <div class="linebreak"></div>
         <div class="warning">
@@ -55,7 +55,7 @@ if(state === "new") {
         <div class="linebreak"></div>
     `
     commandBefore.innerHTML = `
-        <p>Terbium:</p><div class="commandP" contentEditable spellcheck="false"></div>
+        <p>NoOS:</p><div class="commandP" contentEditable spellcheck="false"></div>
     `;
     document.querySelector(".termin").appendChild(commandBefore);
     document.querySelector("html").setAttribute("data-state", "old");
