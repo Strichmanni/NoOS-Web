@@ -1,26 +1,23 @@
 [
   {
-    "name": "Browser",
-    "icon": "apps/browser.png",
-    "src": "apps/browser.html",
-    "dock": true
-  },
-  {
-    "name": "Terminal",
-    "icon": "apps/terminal.png",
-    "src": "apps/terminal.html",
-    "dock": true
-  },
-  {
-    "name": "Editor",
-    "icon": "apps/editor.png",
-    "src": "apps/editor.html",
-    "dock": false
-  }
-  {
     "name": "AppStore",
-    "icon": "apps/editor.png",
+    "icon": "icons/appstore.png",
     "src": "noapps.html",
-    "dock": true
+    "dock": true,
+    "desktop": false
+  },
+  {
+    "name": "Browser",
+    "icon": "icons/browser.png",
+    "src": "https://example.com",
+    "dock": true,
+    "desktop": true
+  },
+  {
+    "name": "Notizen",
+    "icon": "icons/notes.png",
+    "src": "/apps/notes.html",
+    "dock": false,
+    "desktop": true
   }
 ]
